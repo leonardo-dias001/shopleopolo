@@ -1,0 +1,109 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const items = document.querySelectorAll('.menu-item');
+    let totalItems = 0;
+    let totalPrice = 0;
+    let orderItems = new Map();  // Usando um Map para armazenar itens e suas quantidades
+
+    function updateOrderDescription() {
+        orderDescription = '';
+        orderItems.forEach((quantity, name) => {
+            if (quantity > 0) {
+                orderDescription += `${name} x${quantity}, `; // Formata cada item com sua quantidade
+            }
+        });
+        if (orderDescription.length > 0) {
+            orderDescription = orderDescription.slice(0, -2);  // Remove a última vírgula e espaço
+        }
+    }
+
+    items.forEach(item => {
+        const decreaseButton = item.querySelector('.decrease');
+        const increaseButton = item.querySelector('.increase');
+        const quantitySpan = item.querySelector('.quantity');
+        const price = parseFloat(item.querySelector('.price').textContent.replace('R$', '').replace(',', '.'));
+        const itemName = item.querySelector('h3').textContent;
+
+        decreaseButton.addEventListener('click', function() {
+            let currentQuantity = parseInt(quantitySpan.textContent);
+            if (currentQuantity > 0) {
+                currentQuantity--;
+                quantitySpan.textContent = currentQuantity;
+                totalItems--;
+                totalPrice -= price;
+                orderItems.set(itemName, currentQuantity);  // Atualiza a quantidade no Map
+                updateOrderDescription();
+                updateCartInfo();
+            }
+        });
+
+        increaseButton.addEventListener('click', function() {
+            let currentQuantity = parseInt(quantitySpan.textContent);
+            currentQuantity++;
+            quantitySpan.textContent = currentQuantity;
+            totalItems++;
+            totalPrice += price;
+            orderItems.set(itemName, currentQuantity);  // Atualiza a quantidade no Map
+            updateOrderDescription();
+            updateCartInfo();
+        });
+    });
+
+    function updateCartInfo() {
+        document.querySelector('.total-items').textContent = totalItems;
+        document.querySelector('.total-price').textContent = totalPrice.toFixed(2).replace('.', ',');
+    }
+
+    const finalizeButton = document.querySelector('.finalize-btn');
+    const cancelButton = document.querySelector('.cancel-btn');
+
+    finalizeButton.addEventListener('click', function() {
+        const addressModal = document.getElementById('address-modal');
+        addressModal.style.display = 'flex';
+    });
+
+    const closeButton = document.getElementById('close-address-modal');
+    closeButton.addEventListener('click', function() {
+        const addressModal = document.getElementById('address-modal');
+        addressModal.style.display = 'none';
+    });
+
+    const submitButton = document.getElementById('submit-address');
+    submitButton.addEventListener('click', function() {
+        const street = document.getElementById('street').value;
+        const type = document.getElementById('type').value;
+        const number = document.getElementById('number').value;
+        const change = document.getElementById('change').value;
+
+        const message = `Olá, segue abaixo o meu pedido:\n\nItens:\n${orderDescription}\n\nLocal de entrega:\nRua: ${street}, ${type}, ${number}\nTroco para: ${change}\nTotal Preço: R$${totalPrice.toFixed(2).replace('.', ',')}`;
+
+        console.log('Endereço do cliente:', street, type, number, 'Troco para:', change);
+        console.log('Mensagem a enviar:', message);
+
+        // Abre a conversa no WhatsApp com o número correto
+        window.open('https://wa.me/5516991713186?text=' + encodeURIComponent(message));
+
+        // Limpar variáveis do pedido após finalizar
+        totalItems = 0;
+        totalPrice = 0;
+        orderItems.clear();  // Limpa o Map
+        updateCartInfo();
+
+        // Resetar quantidades para 0
+        document.querySelectorAll('.quantity').forEach(quantitySpan => quantitySpan.textContent = '0');
+
+        alert('Pedido finalizado com sucesso!');
+    });
+
+    cancelButton.addEventListener('click', function() {
+        totalItems = 0;
+        totalPrice = 0;
+        orderItems.clear();  // Limpa o Map
+        document.querySelectorAll('.quantity').forEach(function(quantitySpan) {
+            quantitySpan.textContent = '0';
+        });
+        updateCartInfo();
+        alert('Pedido cancelado.');
+    });
+});
+</script>

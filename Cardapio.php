@@ -25,10 +25,10 @@
     }
     .menu-section {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Correção para dispositivos móveis */
-        gap: 20px;
+        grid-template-columns: repeat(2, 1fr); /* Alterado para exibir 2 itens por linha */
+        gap: 10px;
         padding: 20px;
-        margin: 20px auto;
+        margin: 10px auto;
         max-width: 1200px;
     }
     .menu-item {
@@ -37,12 +37,16 @@
         padding: 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         display: flex;
-        flex-direction: column;
+        flex-direction: column; 
         align-items: center;
-    }
+        justify-content: center; 
+        min-height: 150px; 
+        width: 150px; 
+    }  
     .menu-item img {
         width: auto;
-        max-width: 100%;
+        max-width: 148px;
+        max-height: 148px;
         height: auto;
         border-radius: 8px;
         margin-bottom: 10px;
@@ -158,22 +162,15 @@
 
 <div class="nav-bar">
     <a href="#">Itens</a>
-    
 </div>
 
 <div class="menu-section">
-    <!-- Exemplo de item do cardápio -->
-<?php
-
-    include 'banco.php'; // Incluindo o arquivo de conexão
-
-    // Consulta ao banco de dados
+    <?php
+    include 'banco.php';
     $sql = "SELECT titulo, descricao, foto, valor_venda FROM itens";
-    $result = $conn->query($sql); // Usando o MySQLi
+    $result = $conn->query($sql);
 
-// Verificar se há resultados
     if ($result->num_rows > 0) {
-        // Iteração sobre os resultados e criação das divs dos itens do menu
         while ($item = $result->fetch_assoc()) {
             echo '<div class="menu-item">';
             echo '<img src="uploads/' . htmlspecialchars($item['foto']) . '" alt="' . htmlspecialchars($item['titulo']) . '">';
@@ -192,22 +189,18 @@
     } else {
         echo "0 resultados";
     }
+    $conn->close();
+    ?>
+</div>
 
-        // Fechar a conexão
-        $conn->close();
-        ?>
-            <!-- Repita a estrutura .menu-item para outros itens do menu -->
-        </div>
+<div class="cart-info">
+    <div>Total Itens: <span class="total-items">0</span> | Total Preço: R$<span class="total-price">0,00</span></div>
+    <div class="cart-buttons">
+        <button class="finalize-btn">Finalizar</button>
+        <button class="cancel-btn">Cancelar</button>
+    </div>
+</div>
 
-        <div class="cart-info">
-            <div>Total Itens: <span class="total-items">0</span> | Total Preço: R$<span class="total-price">0,00</span></div>
-            <div class="cart-buttons">
-                <button class="finalize-btn">Finalizar</button>
-                <button class="cancel-btn">Cancelar</button>
-            </div>
-        </div>
-
-<!-- Modal para coletar endereço -->
 <div class="modal" id="address-modal" style="display: none;">
     <div class="modal-content">
         <label>Rua:</label>
@@ -228,30 +221,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const items = document.querySelectorAll('.menu-item');
     let totalItems = 0;
     let totalPrice = 0;
-    let orderDescription = '';
+    let orderItems = new Map();  // Usando um Map para armazenar itens e suas quantidades
+
+    function updateOrderDescription() {
+        orderDescription = '';
+        orderItems.forEach((quantity, name) => {
+            if (quantity > 0) {
+                orderDescription += `${name} x${quantity}, `; // Formata cada item com sua quantidade
+            }
+        });
+        if (orderDescription.length > 0) {
+            orderDescription = orderDescription.slice(0, -2);  // Remove a última vírgula e espaço
+        }
+    }
 
     items.forEach(item => {
         const decreaseButton = item.querySelector('.decrease');
         const increaseButton = item.querySelector('.increase');
-        const quantitySpan   = item.querySelector('.quantity');
+        const quantitySpan = item.querySelector('.quantity');
         const price = parseFloat(item.querySelector('.price').textContent.replace('R$', '').replace(',', '.'));
         const itemName = item.querySelector('h3').textContent;
-        const itemDescription = item.querySelector('p').textContent;
 
         decreaseButton.addEventListener('click', function() {
             let currentQuantity = parseInt(quantitySpan.textContent);
             if (currentQuantity > 0) {
-                quantitySpan.textContent = currentQuantity - 1;
+                currentQuantity--;
+                quantitySpan.textContent = currentQuantity;
                 totalItems--;
                 totalPrice -= price;
+                orderItems.set(itemName, currentQuantity);  // Atualiza a quantidade no Map
+                updateOrderDescription();
                 updateCartInfo();
             }
         });
 
         increaseButton.addEventListener('click', function() {
-            quantitySpan.textContent = parseInt(quantitySpan.textContent) + 1;
+            let currentQuantity = parseInt(quantitySpan.textContent);
+            currentQuantity++;
+            quantitySpan.textContent = currentQuantity;
             totalItems++;
             totalPrice += price;
+            orderItems.set(itemName, currentQuantity);  // Atualiza a quantidade no Map
+            updateOrderDescription();
             updateCartInfo();
         });
     });
@@ -278,11 +289,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submit-address');
     submitButton.addEventListener('click', function() {
         const street = document.getElementById('street').value;
-        const type   = document.getElementById('type').value;
+        const type = document.getElementById('type').value;
         const number = document.getElementById('number').value;
         const change = document.getElementById('change').value;
 
-        const message = `Olá, segue abaixo o meu pedido:\n\nItens:\n${orderDescription}\nLocal de entrega:\nRua: ${street}, ${type}, ${number}\nTroco para: ${change}\nTotal Preço: R$${totalPrice.toFixed(2).replace('.', ',')}`;
+        const message = `Olá, segue abaixo o meu pedido:\n\nItens:\n${orderDescription}\n\nLocal de entrega:\nRua: ${street}, ${type}, ${number}\nTroco para: ${change}\nTotal Preço: R$${totalPrice.toFixed(2).replace('.', ',')}`;
 
         console.log('Endereço do cliente:', street, type, number, 'Troco para:', change);
         console.log('Mensagem a enviar:', message);
@@ -290,18 +301,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Abre a conversa no WhatsApp com o número correto
         window.open('https://wa.me/5516991713186?text=' + encodeURIComponent(message));
 
-        const addressModal = document.getElementById('address-modal');
-        addressModal.style.display = 'none';
-
         // Limpar variáveis do pedido após finalizar
         totalItems = 0;
-        totalItems = 0;
         totalPrice = 0;
-        currentQuantity = 0; 
-        orderDescription = '';
+        orderItems.clear();  // Limpa o Map
         updateCartInfo();
 
-        //VOLTA QUANTIDADE DO ITEM PARA 0 
+        // Resetar quantidades para 0
         document.querySelectorAll('.quantity').forEach(quantitySpan => quantitySpan.textContent = '0');
 
         alert('Pedido finalizado com sucesso!');
@@ -310,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cancelButton.addEventListener('click', function() {
         totalItems = 0;
         totalPrice = 0;
-        orderDescription = '';
+        orderItems.clear();  // Limpa o Map
         document.querySelectorAll('.quantity').forEach(function(quantitySpan) {
             quantitySpan.textContent = '0';
         });
@@ -319,6 +325,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+
 
 </body>
 </html>
