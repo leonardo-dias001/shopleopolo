@@ -1,3 +1,17 @@
+<?php
+session_start(); // Inicia a sessão
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // Se não estiver logado, redireciona para a página de login
+    header("Location: login.php");
+    exit;
+}
+
+// Armazena o nome da empresa em uma variável para fácil acesso
+$nomeEmpresa = $_SESSION['empresa'];
+?>
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -161,6 +175,10 @@
 </script>
 
     <form action="" method="POST" enctype="multipart/form-data">
+
+        <label for="Nome_empresa">Empresa:</label>
+        <input type="text" id="Nome_empresa" name="Nome_empresa" required value="<?php echo htmlspecialchars($nomeEmpresa); ?>"readonly>
+
         <label for="titulo">Título:</label>
         <input type="text" id="titulo" name="titulo" required>
 
@@ -187,12 +205,13 @@
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cadastrar'])) {
         include 'banco.php'; // Certifique-se de incluir o arquivo de conexão corretamente
 
-        $titulo      = $_POST['titulo'];
-        $descricao   = $_POST['descricao'];
-        $fotoNome    = $_FILES['foto']['name'];
-        $valorCompra = $_POST['valor_compra'];
-        $valorVenda  = $_POST['valor_venda'];
-        $lucro       = $_POST['lucro'];
+        $titulo       = $_POST ['titulo'];
+        $descricao    = $_POST ['descricao'];
+        $fotoNome     = $_FILES['foto']['name'];
+        $valorCompra  = $_POST ['valor_compra'];
+        $valorVenda   = $_POST ['valor_venda'];
+        $lucro        = $_POST ['lucro'];
+        $Nome_empresa = $_POST ['Nome_empresa'];
 
         $diretorioUpload = 'uploads/';
         if (!is_dir($diretorioUpload)) {
@@ -206,10 +225,10 @@
             echo "Ocorreu um erro ao fazer upload do arquivo.";
         }
 
-        $sql = "INSERT INTO itens (TITULO, DESCRICAO, FOTO, VALOR_COMPRA, VALOR_VENDA, LUCRO) VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO itens (TITULO, DESCRICAO, FOTO, VALOR_COMPRA, VALOR_VENDA, LUCRO,Nome_empresa) VALUES (?, ?, ?, ?, ?, ?,?)";
         
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssss", $titulo, $descricao, $fotoNome, $valorCompra, $valorVenda, $lucro);
+        $stmt->bind_param("sssssss", $titulo, $descricao, $fotoNome, $valorCompra, $valorVenda, $lucro, $Nome_empresa);
 
         if ($stmt->execute()) {
             echo "Novo registro criado com sucesso.";

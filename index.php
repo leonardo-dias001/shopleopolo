@@ -1,3 +1,14 @@
+<?php
+session_start(); // Inicia a sessão
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // Se não estiver logado, redireciona para a página de login
+    header("Location: login.php");
+    exit;
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -101,11 +112,11 @@
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
     <a href="javascript:void(0)" class="dropdown-btn">Cadastros</a>
     <div class="dropdown-container">
-        <a href="#">Usuário</a>
+        <a href="usuario_cadastro.php">Usuário</a>
         <a href="Cadastro_item.php">Item</a>
         
     </div>
-    <a href="Cardapio.php">Cardápio</a>
+    <a href="Cardapio.php?e='ADEGAS016'">Cardápio</a>
     
 </div>
 

@@ -167,7 +167,7 @@
 <div class="menu-section">
     <?php
     include 'banco.php';
-    $sql = "SELECT titulo, descricao, foto, valor_venda FROM itens";
+    $sql = "SELECT titulo, descricao, foto, valor_venda FROM itens i where i.Nome_empresa = 'PECADODOAMOR'";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
