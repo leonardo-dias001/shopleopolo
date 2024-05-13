@@ -175,11 +175,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
     <a href="javascript:void(0)" class="dropdown-btn">Cadastros</a>
     <div class="dropdown-container">
-        <a href="#">Empresa</a>
-        <a href="#">Usuário</a>
+        <a href="usuario_cadastro.php">Usuário</a>
+        <a href="Cadastro_item.php">Item</a>
+        
     </div>
-    <a href="#">Financeiro</a>
-</div>
+    <a href="Cardapio.php?e='ADEGAS016'">Cardápio</a>
 
 <script>
     function toggleNav() {
